@@ -1,0 +1,10 @@
+f=9250b67d676fcdce.root
+echo working on $f...
+rm -f ${f%.*}.batchlog &> /dev/null
+cp rip/$f rip_snapshot/$f
+echo "begin quality control"
+nice -10 python qualitycontrol.py rip_snapshot/$f |& tee -a ${f%.*}.batchlog
+echo "begin probe"
+nice -10 python probe.py rip_snapshot/$f |& tee -a ${f%.*}.batchlog
+echo "begin morestats"
+nice -10 python morestats.py rip_snapshot/$f |& tee -a ${f%.*}.batchlog

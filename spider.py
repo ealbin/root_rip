@@ -1,0 +1,49 @@
+from array import array as array
+import crayfis_data_pb2 as cray
+import os               as os
+import ROOT             as R
+import sys              as sys
+import tarfile          as tarf
+import unpack           as unpack
+
+import pdb
+
+if len(sys.argv) == 1:
+    print '>> sausage: python spider.py [-id device_id] start_path'
+    sys.exit()
+
+device_mode = False
+if sys.argv[1] == '-id':
+    device_mode = True
+    device_id   = sys.argv[2]
+    start_path  = sys.argv[3]
+else:
+    start_path  = sys.argv[1]
+    
+tarfiles   = []
+for path, directories, files in os.walk( start_path ):
+
+        if '_old/' in path: continue
+            # probably both good and bad data mixed together ultra low priority, 
+            # about 24 files from < 2016, skip over..
+
+        for filename in files:
+            if filename.endswith('.tar.gz'):
+                tarfiles.append( os.path.join(path,filename) )
+
+tarfiles = sorted( tarfiles, key=lambda k: k.lower(), reverse=True )
+for file in tarfiles:
+    # search inside tar.gz files
+    tarfile = tarf.open( file, 'r:gz' )
+    messages = [ member for member in tarfile.getmembers() if member.name.endswith('.msg') ]
+    for message in messages:
+        if device_mode and str(message.name).find(device_id) == -1:
+            continue
+        msg  = tarfile.extractfile( message )
+        print '{} / {}: '.format(file, message.name),
+        basics = {}
+        basics['tarfile'] = { 'value' : array('c', file + '->' + message.name + '\0'), 'code' : 'C' }
+        unpack.CrayonMessage( msg, basics)
+        msg.close()
+        print ''
+    tarfile.close()
