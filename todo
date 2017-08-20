@@ -1,0 +1,38 @@
+3488c92992b0cf85.root      
+60bd210820124dc1.root      
+49b39d43795ccd20.root      
+f22c836c386a536d.root      
+b28f96e4ebd78e55.root      
+6465c1729943615b.root      
+9250b67d676fcdce.root
+
+
+TODO:
+
+(1) label data
+    (A) how?
+        (i) organize data
+            (a) spider
+                - needs to run in parallel
+                - stuck
+            (b) quality control
+                - works great
+            (c) probe
+                - works great
+            (d) more stats
+                - works great
+                
+
+Current Goal:  Run Spider in Parallel 
+    how?
+        (a) mutex 
+            (i) software class
+                - learning needed
+                - might not work
+            (ii) harddisk file  
+                - no learning needed
+                - idiot proof
+                - may be slow 
+
+Current Task:  Make harddisk file mutex                             
+                

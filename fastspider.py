@@ -1,3 +1,4 @@
+# takes about 50ms to open/read tarfile
 
 import ROOT as R
 import tarfile as tarf
@@ -33,12 +34,14 @@ for ifile, file in enumerate(tarfiles):
         msg = tarfile.extractfile( message )
     stopwatch.Stop("stopwatch")
     timing.Fill( stopwatch.GetCpuTime("stopwatch") )
-    if update == 20:
+    if update == 100:
         print "\r                                              \r",
-        print "\t{:>.3}%".format( ifile / float(ntarfiles) * 100. ),
+        print "Working... {:>.3}%\r".format( ifile / float(ntarfiles) * 100. ),
         sys.stdout.flush()
         timing.Draw()
         C.Update()
         update = -1
     update += 1
+timing.Draw()
+C.Update()
 print
