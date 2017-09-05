@@ -85,10 +85,9 @@ def clearVectors( basics ):
         if str( type(dic['value']) ).find( 'ROOT.vector' ) >= 0:
             dic['value'].clear()
 
-def openFile( basics ):
+def openFile( basics, export_path ):
     assert 'device_id' in basics.keys()
-    repository = './rip/'
-    path = os.path.join( repository, basics['device_id']['value'].tostring().strip('\0') + '.root' )
+    path = os.path.join( export_path, basics['device_id']['value'].tostring().strip('\0') + '.root' )
     if not os.path.isfile( path ):
         file = R.TFile( path, 'create' )
         file.mkdir( 'exposure_blocks', 'exposure_blocks description' )
@@ -259,7 +258,7 @@ def CalibrationResults( calibration_results, basics ):
     fillTree( basics, tree )
     tree.Write('', R.TObject.kOverwrite)
 
-def CrayonMessage( crayon_message, basics ):
+def CrayonMessage( crayon_message, basics, export_path ):
     crayon_message.seek(0)
 
     crayon          = cray.CrayonMessage.FromString( crayon_message.read() )
@@ -276,7 +275,7 @@ def CrayonMessage( crayon_message, basics ):
     assert crayon_bytes[0]['name'] == 'payload'
 
     saveBasics( crayon_basics, basics )    
-    file = openFile( basics )
+    file = openFile( basics, export_path )
 
     payload          = cray.DataChunk.FromString( crayon_bytes[0]['value'] )
     payload_dic      = getDic( payload )
