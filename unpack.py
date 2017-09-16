@@ -202,10 +202,23 @@ def RunConfig( run_config, basics ):
     for i, basic in enumerate(config_basics):
         if basic['name'].find('_params') >= 0:
             string = basic['value'].strip('\0')
-            for token in string.split(';'):
+            delimiter = ';'
+            if string.find(', android.') != -1:
+                delimiter = ', '
+            for j, token in enumerate(string.split(delimiter)):
+                token.strip()
                 if token == '':
                     continue
-                newkey, newval = token.split('=')
+                subdelimiter = '='
+                if delimiter == ', ':
+                    subdelimiter = ':'
+                if len(token.split(subdelimiter)) != 2:
+                    print
+                    print '\tERROR: unpack.py, anomalous field delimitation: ' + token
+                    print '\t\t repair: adding to end of ' + config_basics[-1]['name'] + ': ' + config_basics[-1]['value'] + delimiter + token
+                    config_basics[-1]['value'] += delimiter + token 
+                    continue
+                newkey, newval = token.split(subdelimiter)
                 config_basics.append( { 'typecode' : {'type':'STRING', 'code':'C'}, 'name' : newkey.replace('-','_'), 'value' : newval } )
             config_basics.pop(i)
 

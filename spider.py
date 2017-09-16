@@ -11,9 +11,9 @@ if len(sys.argv) != 3:
     print '>> sausage: python spider.py import_path export_path'
     sys.exit()
 
-    import_path = sys.argv[1]
-    export_path = sys.argv[2]
-    
+import_path = sys.argv[1]
+export_path = sys.argv[2]
+
 tarfiles   = []
 for path, directories, files in os.walk( import_path ):
 
@@ -23,17 +23,20 @@ for path, directories, files in os.walk( import_path ):
 
         for filename in files:
             if filename.endswith('.tar.gz'):
-                tarfiles.append( os.path.join(path,filename) )
+                tarfiles.append( os.path.join(path[path.find('/data'):],filename) )
 
 tarfiles = sorted( tarfiles, key=lambda k: k.lower(), reverse=True )
+
 for file in tarfiles:
 
     # search inside tar.gz files
-    tarfile = tarf.open( file, 'r:gz' )
-    messages = [ member for member in tarfile.getmembers() if member.name.endswith('.msg') ]
+    print
+    basepath = import_path[:import_path.find('/data')]
+    tarfile = tarf.open( basepath + file, 'r:gz' )
+    messages = sorted( [ member for member in tarfile.getmembers() if member.name.endswith('.msg') ], key=lambda k: k.name.lower() )
     for message in messages:
         msg  = tarfile.extractfile( message )
-        print '{} / {}: '.format(file, message.name),
+        print '{A} / {B}: '.format(A=file, B=message.name),
         basics = {}
         basics['tarfile'] = { 'value' : array('c', file + '->' + message.name + '\0'), 'code' : 'C' }
         unpack.CrayonMessage( msg, basics, export_path )
