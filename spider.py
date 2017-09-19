@@ -14,6 +14,9 @@ if len(sys.argv) != 3:
 import_path = sys.argv[1]
 export_path = sys.argv[2]
 
+stopwatch = R.TStopwatch()
+stopwatch.Start()
+
 tarfiles   = []
 for path, directories, files in os.walk( import_path ):
 
@@ -26,7 +29,7 @@ for path, directories, files in os.walk( import_path ):
                 tarfiles.append( os.path.join(path[path.find('/data'):],filename) )
 
 tarfiles = sorted( tarfiles, key=lambda k: k.lower(), reverse=True )
-
+n_messages = 0
 for file in tarfiles:
 
     # search inside tar.gz files
@@ -35,6 +38,7 @@ for file in tarfiles:
     tarfile = tarf.open( basepath + file, 'r:gz' )
     messages = sorted( [ member for member in tarfile.getmembers() if member.name.endswith('.msg') ], key=lambda k: k.name.lower() )
     for message in messages:
+        n_messages += 1
         msg  = tarfile.extractfile( message )
         print '{A} / {B}: '.format(A=file, B=message.name),
         basics = {}
@@ -42,4 +46,9 @@ for file in tarfiles:
         unpack.CrayonMessage( msg, basics, export_path )
         msg.close()
         print ''
+        sys.stdout.flush()
     tarfile.close()
+    print
+    sofar = stopwatch.CpuTime()
+    stopwatch.Continue()
+    print 'CPU TIME ELAPSE: {0}, over {1} messages = {2} [s/message]'.format(sofar, n_messages, sofar / float(n_messages) )

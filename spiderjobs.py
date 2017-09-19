@@ -10,7 +10,7 @@ import tarfile as tarf
 
 origin = '/data/daq.crayfis.io/raw'  # data source
 export = './spiderjobs'  # destination folder
-step   = 30   # data files per job
+step   = 10   # data files per job
 
 print '> data source: ' + origin
 print '>              {} data files per job'.format(step)

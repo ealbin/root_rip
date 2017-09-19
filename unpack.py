@@ -176,7 +176,7 @@ def ExposureBlock( exposure_block, basics ):
     d_keys = [ key.GetName() for key in R.gDirectory.GetListOfKeys() ]
     if str(basics['start_time']['value'][0]) in d_keys:
         print
-        print '\tskipping {}, exposure_block exists'.format( basics['tarfile']['value'].tostring() )
+        print '\tskipping {0}, exposure_block exists'.format( basics['tarfile']['value'].tostring() )
         return
     tree = R.TTree( str( basics['start_time']['value'][0] ), 
                     str( basics['end_time']  ['value'][0] ) )
@@ -229,7 +229,7 @@ def RunConfig( run_config, basics ):
     d_keys = [ key.GetName() for key in R.gDirectory.GetListOfKeys() ]
     if str(basics['start_time']['value'][0]) in d_keys:
         print
-        print '\tskipping {}, run_config exists'.format( basics['tarfile']['value'].tostring() )
+        print '\tskipping {0}, run_config exists'.format( basics['tarfile']['value'].tostring() )
         return
     tree = R.TTree( str( basics['start_time'   ]['value'][0] ), 
                          basics['crayfis_build']['value'].tostring().strip('\0') )
@@ -264,7 +264,7 @@ def CalibrationResults( calibration_results, basics ):
     d_keys = [ key.GetName() for key in R.gDirectory.GetListOfKeys() ]
     if str(basics['submit_time']['value'][0]) in d_keys:
         print
-        print '\tskipping {}, calibration_result exists'.format( basics['tarfile']['value'].tostring() )
+        print '\tskipping {0}, calibration_result exists'.format( basics['tarfile']['value'].tostring() )
         return
     tree = R.TTree( str( basics['submit_time']['value'][0] ), 'submit_time' )
 
@@ -284,13 +284,29 @@ def CrayonMessage( crayon_message, basics, export_path ):
     # assert expected structure: basics and bytes by the name of 'payload'
     assert len( crayon_messages )  == 0
     assert len( crayon_enums    )  == 0
-    assert len( crayon_bytes    )  == 1
+    if len( crayon_bytes ) == 0:
+        print
+        print '\tskipping {0}, no payload'.format( basics['tarfile']['value'].tostring() )
+        return
+    if len( crayon_bytes) > 1:
+        print
+        print '\tERROR {0}, multiple payloads, skipping'.format( basics['tarfile']['value'].tostring() )
+        return
     assert crayon_bytes[0]['name'] == 'payload'
 
     saveBasics( crayon_basics, basics )    
     file = openFile( basics, export_path )
 
-    payload          = cray.DataChunk.FromString( crayon_bytes[0]['value'] )
+    payload = ''
+    try:
+        payload = cray.DataChunk.FromString( crayon_bytes[0]['value'] )
+    except Exception, e:
+        print
+        print '\tException {0}:'.format( basics['tarfile']['value'].tostring() )
+        print '\t\t{0}'.format(e)
+        print '\t\tDebug crayon_bytes[0][value][-50:] = {0}'.format( str(crayon_bytes[0]['value'])[-50:] )
+        print '\tskipping'
+        return
     payload_dic      = getDic( payload )
     payload_basics   = payload_dic['basics'  ]
     payload_bytes    = payload_dic['bytes'   ]
