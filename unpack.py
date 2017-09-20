@@ -104,7 +104,6 @@ def openFile( basics, export_path ):
         file.Close()
     return R.TFile( path, 'update' )
   
-
 def fillTree( basics, tree ):
     ordered = [ [key, dic] for [key, dic] in basics.iteritems() ]
     ordered = sorted( ordered, key=lambda k: k[0].lower() )
@@ -112,12 +111,12 @@ def fillTree( basics, tree ):
     branches = [ branch.GetName() for branch in tree.GetListOfBranches() ]
     for key, dic in ordered:
         if key in branches:
-            tree.SetBranchAddress( key, dic['value'] )
+            tree.SetBranchAddress( str(key), dic['value'] )
         else:
             if dic['code'] == '':
-                tree.Branch( key, dic['value'] )
+                tree.Branch( str(key), dic['value'] )
             else:
-                tree.Branch( key, dic['value'], key + '/' + dic['code'] )
+                tree.Branch( str(key), dic['value'], key + '/' + dic['code'] )
     tree.Fill()
 
 def Pixel( pixel, basics ):
