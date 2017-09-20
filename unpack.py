@@ -71,8 +71,16 @@ def saveBasics( vars, container ):
         if basic['typecode']['type'] == 'STRING':
             container[ basic['name'] ] = { 'value' : array('c', str(basic['value']) + '\0'), 'code' : basic['typecode']['code'] }
         else:
-            container[ basic['name'] ]['value'][0] = basic['value']
-
+            try:
+                container[ basic['name'] ]['value'][0] = basic['value']
+            except Exception, e:
+                print
+                print '\tException {0}:'.format( container['tarfile']['value'].tostring() )
+                print '\t\t{0}'.format(e)
+                print '\t\tDebug info: {0} doesnt work for {1} type for {2}'.format( basic['value'], basic['typecode']['type'],basic['name'] )
+                print '\tWARNING: setting value to 0 and moving on...'
+                container[ basic['name'] ]['value'][0] = 0                
+                
 # container = { 'var name' : R.vector(type) }
 def saveVectors( vars, container ):
     for vector in vars:
