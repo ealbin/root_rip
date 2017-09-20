@@ -163,6 +163,10 @@ def ExposureBlock( exposure_block, basics ):
     
     # assert expected structure: exposure_block basics, messages, and one enum
     assert len( block_bytes ) == 0
+    if len( block_enums ) == 0:
+        print
+        print '\tskipping {0}, block_enums missing'.format( basics['tarfile']['value'].tostring() )
+        return
     assert len( block_enums ) == 1
     assert block_enums[0]['name'] == 'daq_state'
 
