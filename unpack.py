@@ -1,8 +1,12 @@
+import pdb
 from array import array as array
 import crayfis_data_pb2 as cray
 import numpy            as np
 import os               as os
 import ROOT             as R
+
+OK  = 0
+ERR = 1
 
 def getType( field_descriptor ):
         def makeDic( type, code ):
@@ -79,6 +83,7 @@ def saveBasics( vars, container ):
                 print '\t\t{0}'.format(e)
                 print '\t\tDebug info: {0} doesnt work for {1} type for {2}'.format( basic['value'], basic['typecode']['type'],basic['name'] )
                 print '\tWARNING: setting value to 0 and moving on...'
+                pdb.set_trace()
                 container[ basic['name'] ]['value'][0] = 0                
                 
 # container = { 'var name' : R.vector(type) }
@@ -165,7 +170,7 @@ def ExposureBlock( exposure_block, basics ):
     if len( block_enums ) == 0:
         print
         print '\tskipping {0}, block_enums missing'.format( basics['tarfile']['value'].tostring() )
-        return
+        return ERR
     assert len( block_enums ) == 1
     assert block_enums[0]['name'] == 'daq_state'
 
@@ -177,7 +182,9 @@ def ExposureBlock( exposure_block, basics ):
     elif block_enums[0]['value'] == 2:
         v = 'DATA'
     else:
-        print "ENUM ERROR unpack.py"
+        print
+        print '\tskipping {0}, invalid block_enum'.format( basics['tarfile']['value'].tostring() )
+        return ERR    
     block_basics.append( { 'typecode' : {'type':'STRING', 'code':'C'}, 'name' : 'daq_state', 'value' : v } )
 
     saveBasics( block_basics, basics )
@@ -188,7 +195,7 @@ def ExposureBlock( exposure_block, basics ):
     if str(basics['start_time']['value'][0]) in d_keys:
         print
         print '\tskipping {0}, exposure_block exists'.format( basics['tarfile']['value'].tostring() )
-        return
+        return ERR
     tree = R.TTree( str( basics['start_time']['value'][0] ), 
                     str( basics['end_time']  ['value'][0] ) )
 
@@ -197,7 +204,8 @@ def ExposureBlock( exposure_block, basics ):
         for event in message['value']:
             Event( event, basics, tree )
     tree.Write('', R.TObject.kOverwrite)
-
+    return OK
+    
 def RunConfig( run_config, basics ):
     config_dic      = getDic( run_config )
     config_basics   = config_dic['basics'  ]
@@ -241,13 +249,14 @@ def RunConfig( run_config, basics ):
     if str(basics['start_time']['value'][0]) in d_keys:
         print
         print '\tskipping {0}, run_config exists'.format( basics['tarfile']['value'].tostring() )
-        return
+        return ERR
     tree = R.TTree( str( basics['start_time'   ]['value'][0] ), 
                          basics['crayfis_build']['value'].tostring().strip('\0') )
 
     fillTree( basics, tree )
     tree.Write('', R.TObject.kOverwrite)
-
+    return OK
+    
 def CalibrationResults( calibration_results, basics ):
     results_dic      = getDic( calibration_results )
     results_basics   = results_dic['basics'  ]
@@ -276,12 +285,13 @@ def CalibrationResults( calibration_results, basics ):
     if str(basics['submit_time']['value'][0]) in d_keys:
         print
         print '\tskipping {0}, calibration_result exists'.format( basics['tarfile']['value'].tostring() )
-        return
+        return ERR
     tree = R.TTree( str( basics['submit_time']['value'][0] ), 'submit_time' )
 
     fillTree( basics, tree )
     tree.Write('', R.TObject.kOverwrite)
-
+    return OK
+    
 def CrayonMessage( crayon_message, basics, export_path ):
     crayon_message.seek(0)
 
@@ -317,6 +327,7 @@ def CrayonMessage( crayon_message, basics, export_path ):
         print '\t\t{0}'.format(e)
         print '\t\tDebug crayon_bytes[0][value][-50:] = {0}'.format( str(crayon_bytes[0]['value'])[-50:] )
         print '\tskipping'
+        file.Close()
         return
     payload_dic      = getDic( payload )
     payload_basics   = payload_dic['basics'  ]
@@ -329,22 +340,29 @@ def CrayonMessage( crayon_message, basics, export_path ):
     assert len( payload_bytes  )  == 0
     assert len( payload_enums  )  == 0
     
+    if len( payload_messages ) == 0:
+        print
+        print '\tskipping {0}, empty payload'.format( basics['tarfile']['value'].tostring() )
+        file.Close()
+        return
+            
+    errors = 0
     for message in payload_messages:
         assert file.cd( message['name'] )
 
         if message['name'] == 'exposure_blocks':
             for block in message['value']:
-                ExposureBlock( block, basics )
+                errors += ExposureBlock( block, basics )
         elif message['name'] == 'run_configs':
             for config in message['value']:
-                RunConfig( config, basics )
+                errors += RunConfig( config, basics )
         elif message['name'] == 'calibration_results':
             for results in message['value']:
-                CalibrationResults( results, basics )
+                errors += CalibrationResults( results, basics )
         else:
-            print 
-            print 'ERROR'
-            print message['name']
-            print basics
+            print
+            print '\tskipping {0}, unknown payload'.format( basics['tarfile']['value'].tostring() )
+            file.Close()
+            return        
 
     file.Close()

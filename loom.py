@@ -32,72 +32,54 @@ for device, paths in todo.items():
         continue
 
     outfile = R.TFile( os.path.join( export_path, device ), 'create' )
-    outfile.mkdir( 'exposure_blocks', 'exposure_blocks description' )
-    outfile.mkdir( 'run_configs', 'run_configs description' )
-    outfile.mkdir( 'calibration_results', 'calibration_results description' )
-    outfile.Close()
+    e_dir   = outfile.mkdir( 'exposure_blocks', 'exposure_blocks description' )
+    r_dir   = outfile.mkdir( 'run_configs', 'run_configs description' )
+    c_dir   = outfile.mkdir( 'calibration_results', 'calibration_results description' )
 
-    e_keys  = []
-    r_keys  = []
-    c_keys  = []
-    infiles = []
+    tmpfile = R.TFile( os.path.join( export_path, '_tmp.root' ), 'recreate' )
+    tmpfile.ReOpen('update')
+    e_tmp   = tmpfile.mkdir( 'exposure_blocks', 'unsorted' )
+    r_tmp   = tmpfile.mkdir( 'run_configs', 'unsorted' )
+    c_tmp   = tmpfile.mkdir( 'calibration_results', 'unsorted' )
+
     for path in paths:
         print '\t' + path 
+        infile = R.TFile( os.path.join( path, device ) ) 
+        for dir in [ e_tmp, r_tmp, c_tmp ]:
+            dir.cd()
+            for key in infile.GetDirectory(dir.GetName()).GetListOfKeys():
+                tree = key.ReadObj()
+                clone = tree.CloneTree(-1,'fast')
+                clone.Write('',R.TObject.kOverwrite)
+                clone.SetDirectory(0)
+                clone.Delete()
+                tree.Delete()
+        infile.Close()
+        infile.Delete()
+    tmpfile.Write('',R.TObject.kOverwrite)
+    tmpfile.Close()
+    tmpfile = R.TFile( os.path.join( export_path, '_tmp.root' ) )
 
-        infiles.append( R.TFile( os.path.join( path, device ) ) )
-        for e_key in infiles[-1].GetDirectory('exposure_blocks').GetListOfKeys():
-            e_keys.append( e_key )
-        for r_key in infiles[-1].GetDirectory('run_configs').GetListOfKeys():
-            r_keys.append( r_key )
-        for c_key in infiles[-1].GetDirectory('calibration_results').GetListOfKeys():
-            c_keys.append( c_key )                        
-
-    print '\tblocks:  {0}'.format( len(e_keys) )
-    print '\tresults: {0}'.format( len(c_keys) )
-    print '\tconfigs: {0}'.format( len(r_keys) )
+    print '\tblocks:  {0}'.format( len(tmpfile.GetDirectory('exposure_blocks').GetListOfKeys()) )
+    print '\tconfigs: {0}'.format( len(tmpfile.GetDirectory('run_configs').GetListOfKeys()) )
+    print '\tresults: {0}'.format( len(tmpfile.GetDirectory('calibration_results').GetListOfKeys()) )
     print '\twriting...',
     sys.stdout.flush()
-    
-    e_keys = sorted( e_keys, key=lambda k: k.GetName(), reverse=True )
-    r_keys = sorted( r_keys, key=lambda k: k.GetName(), reverse=True )
-    c_keys = sorted( c_keys, key=lambda k: k.GetName(), reverse=True )    
 
-    for k, keys in enumerate( [ e_keys, r_keys, c_keys ] ):
-        if k == 0:
-            dir = 'exposure_blocks'
-        if k == 1:
-            dir = 'run_configs'
-        if k == 2:
-            dir = 'calibration_results'
-
-        outfile = R.TFile( os.path.join( export_path, device ), 'update' )             
-        outfile.cd(dir)
-        t_arr = []
-        count = 0
-        tally = 0
-        print
-        print dir + ' i : n    ',
-        for i_key, key in enumerate(keys):
-            t_arr.append( key.ReadObj().CloneTree(-1,'fast') )
-            tally += t_arr[-1].GetEntriesFast()
-            if count >= 10000 or tally >= 10000:
-                print '{} : {}    '.format(i_key,tally),
-                sys.stdout.flush()
-                count = 0
-                tally = 0
-                outfile.Write('',R.TObject.kOverwrite)
-                outfile.Close()
-                del t_arr
-                t_arr = []
-                outfile = R.TFile( os.path.join( export_path, device ), 'update' ) 
-                outfile.cd(dir)
-            count += 1
-        print '{} : {}    '.format(i_key,tally),
-        sys.stdout.flush()    
-        outfile.Write('',R.TObject.kOverwrite)
-        outfile.Close()
-        del t_arr    
-        
-    for infile in infiles:
-        infile.Close()
+    for dir in [ e_dir, r_dir, c_dir ]:
+        dir.cd()
+        keys = [ key for key in tmpfile.GetDirectory(dir.GetName()).GetListOfKeys() ]
+        keys = sorted( keys, key=lambda k: k.GetName(), reverse=False ) # most recent goes last
+        dir_name = dir.GetName()
+        for key in keys:
+            tree = key.ReadObj()
+            clone = tree.CloneTree(-1,'fast')
+            clone.Write()
+            clone.SetDirectory(0)
+            clone.Delete()
+            tree.Delete()
+    outfile.Write('',R.TObject.kOverwrite)
+    tmpfile.Close()
+    outfile.Close()
+    os.remove( os.path.join( export_path, '_tmp.root' ) )
     print 'done'
