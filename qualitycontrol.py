@@ -33,7 +33,7 @@ d.cd('run_configs')
 print '>\t run_configs:'
 for ckey in config_keys:
     title = d_configs.GetKey(ckey).GetTitle()
-    print '\t\trun_config: {}'.format(d_configs.GetKey(ckey).GetName())
+    print '\t\trun_config: {0}'.format(d_configs.GetKey(ckey).GetName())
     if title.find('ignored:') >= 0:
         print '\t\t - skipping b/c ignored'
         continue
@@ -79,7 +79,7 @@ print '>\texposure_blocks:'
 d.cd('../exposure_blocks')
 for bkey in block_keys:
     title = d_blocks.GetKey(bkey).GetTitle()
-    print '\t\texposure_block: {}'.format(d_blocks.GetKey(bkey).GetName())
+    print '\t\texposure_block: {0}'.format(d_blocks.GetKey(bkey).GetName())
     if title.find('ignored:') >= 0: # skip already flagged
         print '\t\t - skipping b/c ignored'
         continue
