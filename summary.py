@@ -9,7 +9,9 @@ start_path = sys.argv[1]
 summary = []
 for path, directories, files in os.walk( start_path ):
     for file in [ file for file in files if file.endswith('.root')]:
+
         f = R.TFile( os.path.join( path, file ) )
+
         d_blocks  = f.GetDirectory('exposure_blocks')
         d_configs = f.GetDirectory('run_configs')
         d_results = f.GetDirectory('calibration_results')
@@ -17,7 +19,18 @@ for path, directories, files in os.walk( start_path ):
         n_blocks  = len( d_blocks.GetListOfKeys()  )
         n_configs = len( d_configs.GetListOfKeys() )
         n_results = len( d_results.GetListOfKeys() )
-
+        
+#        if f.GetStreamerInfoList() == None:
+#            print os.popen('ls -hs {}'.format( os.path.join(path,file) ) ).read().strip()
+#            print os.popen('egrep {} /home/ealbin/root_rip/compared'.format( file.strip('.root') )).read().strip()
+#            f.ls()
+#            d_blocks.ls()
+#            d_configs.ls()
+#            d_results.ls()
+#            print
+#            sys.stdout.flush()
+#            continue
+            
         if n_configs == 0:
             continue
         n_ok     = len([ key for key in d_configs.GetListOfKeys() if key.GetTitle().find('ok'     ) == 0 ])
@@ -54,14 +67,14 @@ for path, directories, files in os.walk( start_path ):
         if ( model0 != model1 ):
             model = 'various'
 
-        year0 = start_time  / ( 1000 * 3600 * 24 * 365 ) # + 1970
-        year1 = last_time   / (        3600 * 24 * 365 ) # + 1970
-        start_time -= year0 * ( 1000 * 3600 * 24 * 365 )
-        last_time  -= year1 * (        3600 * 24 * 365 )
-        year0 += 1970
-        year1 += 1970
+        date0  = os.popen('date -d @{}'.format( float(start_time)/1000. ) ).read().strip().split(' ')
+        date1  = os.popen('date -d @{}'.format( float(last_time)        ) ).read().strip().split(' ')
+        year0  = date0[-1]
+        year1  = date1[-1]
+        month0 = date0[1]
+        month1 = date1[1]
 
-        summary.append( [ make, model, n_paired, n_blocks, n_ok, n_configs, n_results, file, year0, '', version0, year1, '', version1 ] )
+        summary.append( [ make, model, n_paired, n_blocks, n_ok, n_configs, n_results, file, year0, month0, version0, year1, month1, version1 ] )
         f.Close()
 
 summary = sorted( summary, key = lambda x: (x[0], x[2], x[3], x[4], x[5], x[7] ), reverse=False )
@@ -72,7 +85,7 @@ print ':',
 print '{:<18}'.format('model'),
 print '{:^20}'.format('exposure_blocks'),
 print '{:^20}'.format('run_configs'),
-print '{:^20}'.format('calibration_results'),
+print '{:^18}'.format('calibration_results'),
 print '{:^28}'.format('filename'),
 print '{:^36}'.format('first date, version and most recent')
 
@@ -85,13 +98,15 @@ print '{:=^170}'.format('')
 for s in summary:
     if s[0] != current:
         print
-        print '{make:>15}:'.format(make=s[0]),
+#        print '{make:>15}:'.format(make=s[0]),
         current = s[0]
-    else:
-        print '{:>15} '.format(''),
-    print '{model:<20}'.format(model=s[1]),
+#    else:
+#        print '{:>15} '.format(''),
+    print '{make:>15}:'.format(make=s[0][:15]),
+    
+    print '{model:<20}'.format(model=s[1][:20]),
     print '{:^20}'.format( '{paired:>7} / {blocks:<7}'.format(paired=s[2],blocks=s[3]) ),
     print '{:^20}'.format( '{ok:>7} / {configs:<7}'.format(ok=s[4],configs=s[5]) ),
-    print '{results:^20}  '.format(results=s[6] ),
+    print '{results:^16}  '.format(results=s[6] ),
     print '{file:^25}'.format(file=s[7]),
-    print '{year0:^4} ({version0:<10}) to {year1:^4} ({version1:<10})'.format(year0=s[8],version0=s[10][:10],year1=s[11],version1=s[13][:10])
+    print '{year0:4} {month0:3} ({version0:<10}) to {year1:4} {month1:3} ({version1:<10})'.format(year0=s[8],month0=s[9],version0=s[10][:10],year1=s[11],month1=s[12],version1=s[13][:10])
