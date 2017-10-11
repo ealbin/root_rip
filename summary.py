@@ -67,6 +67,7 @@ for path, directories, files in os.walk( start_path ):
         if ( model0 != model1 ):
             model = 'various'
 
+        dt     = float(last_time - start_time/1000.) / 3600. / 24.
         date0  = os.popen('date -d @{}'.format( float(start_time)/1000. ) ).read().strip().split(' ')
         date1  = os.popen('date -d @{}'.format( float(last_time)        ) ).read().strip().split(' ')
         year0  = date0[-1]
@@ -74,7 +75,7 @@ for path, directories, files in os.walk( start_path ):
         month0 = date0[1]
         month1 = date1[1]
 
-        summary.append( [ make, model, n_paired, n_blocks, n_ok, n_configs, n_results, file, year0, month0, version0, year1, month1, version1 ] )
+        summary.append( [ make, model, n_paired, n_blocks, n_ok, n_configs, n_results, file, year0, month0, version0, year1, month1, version1, dt ] )
         f.Close()
 
 summary = sorted( summary, key = lambda x: (x[0], x[2], x[3], x[4], x[5], x[7] ), reverse=False )
@@ -87,14 +88,14 @@ print '{:^20}'.format('exposure_blocks'),
 print '{:^20}'.format('run_configs'),
 print '{:^18}'.format('calibration_results'),
 print '{:^28}'.format('filename'),
-print '{:^36}'.format('first date, version and most recent')
+print '{:^36}'.format('start/end dates, versions and days active')
 
 print '{:>35}'.format(''),
 print '{:^20}'.format('paired / all'),
 print ' {:^22}'.format('ok / all'),
 print '{:^18}'.format(''),
 print '{:^30}'.format('(device_id)')
-print '{:=^170}'.format('')
+print '{:=^180}'.format('')
 for s in summary:
     if s[0] != current:
         print
@@ -109,4 +110,4 @@ for s in summary:
     print '{:^20}'.format( '{ok:>7} / {configs:<7}'.format(ok=s[4],configs=s[5]) ),
     print '{results:^16}  '.format(results=s[6] ),
     print '{file:^25}'.format(file=s[7]),
-    print '{year0:4} {month0:3} ({version0:<10}) to {year1:4} {month1:3} ({version1:<10})'.format(year0=s[8],month0=s[9],version0=s[10][:10],year1=s[11],month1=s[12],version1=s[13][:10])
+    print '{year0:4} {month0:3} ({version0:<10}) to {year1:4} {month1:3} ({version1:<10}) [{days:>4.0f}]'.format(year0=s[8],month0=s[9],version0=s[10][:10],year1=s[11],month1=s[12],version1=s[13][:10],days=s[14])
