@@ -24,6 +24,18 @@ for path, directories, files in os.walk( origin ):
             tarfiles.append( os.path.join(path,filename) )
 tarfiles = sorted( tarfiles, key=lambda k: k.lower(), reverse=True )
 
+# Don't repeat what's done already
+print '> total number of messages: {}'.format(len(tarfiles))
+index = -1
+LAST = '/data/daq.crayfis.io/raw/2017/09/27/i-fc261c39/21.tar.gz'
+for i, file in enumerate(tarfiles):
+    if file == LAST:
+        index = i
+        break
+tarfiles = tarfiles[:index]
+print '> spidering over: {} messages'.format(len(tarfiles))
+
+
 n_files = 0
 for job_num, start in enumerate( xrange( 0, len(tarfiles), step ) ):
     with open( '{dest}/job_{job:0{digits}}.conf'.format( dest=export, job=job_num+1, digits=len(str(len(tarfiles)))-1 ), 'w' ) as job_file:
