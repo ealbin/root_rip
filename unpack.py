@@ -1,4 +1,3 @@
-import pdb
 from array import array as array
 import crayfis_data_pb2 as cray
 import numpy            as np
@@ -83,7 +82,6 @@ def saveBasics( vars, container ):
                 print '\t\t{0}'.format(e)
                 print '\t\tDebug info: {0} doesnt work for {1} type for {2}'.format( basic['value'], basic['typecode']['type'],basic['name'] )
                 print '\tWARNING: setting value to 0 and moving on...'
-                pdb.set_trace()
                 container[ basic['name'] ]['value'][0] = 0                
                 
 # container = { 'var name' : R.vector(type) }
