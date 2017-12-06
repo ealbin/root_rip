@@ -302,7 +302,6 @@ def CrayonMessage( crayon_message, basics, export_path ):
         print '\t\t{0}'.format(e)
         print '\t\tDebug crayon_message.read()[-50:] = {0}'.format( str(crayon_message.read())[-50:] )
         print '\tskipping'
-        file.Close()
         return
     crayon_dic      = getDic( crayon )
     crayon_basics   = crayon_dic['basics'  ]

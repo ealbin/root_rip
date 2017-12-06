@@ -5,7 +5,7 @@ import sys              as sys
 import tarfile          as tarf
 
 if len(sys.argv) != 3:
-    print '>> sausage: python loom.py import_path export_path'
+    print '>> sausage: python batchloom.py import_path export_path'
     sys.exit()
 
 import_path = sys.argv[1]
