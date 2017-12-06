@@ -293,7 +293,17 @@ def CalibrationResults( calibration_results, basics ):
 def CrayonMessage( crayon_message, basics, export_path ):
     crayon_message.seek(0)
 
-    crayon          = cray.CrayonMessage.FromString( crayon_message.read() )
+    crayon = None
+    try:
+        crayon = cray.CrayonMessage.FromString( crayon_message.read() )
+    except Exception, e:
+        print
+        print '\tException {0}:'.format( basics['tarfile']['value'].tostring() )
+        print '\t\t{0}'.format(e)
+        print '\t\tDebug crayon_message.read()[-50:] = {0}'.format( str(crayon_message.read())[-50:] )
+        print '\tskipping'
+        file.Close()
+        return
     crayon_dic      = getDic( crayon )
     crayon_basics   = crayon_dic['basics'  ]
     crayon_bytes    = crayon_dic['bytes'   ]
