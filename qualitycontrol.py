@@ -64,7 +64,8 @@ for ckey in config_keys:
          crayfis_build != 'v0.5.1'     and
          crayfis_build != 'v0.6.0-rc0' and
          crayfis_build != 'v0.7.0'     and
-         crayfis_build != 'v0.8.1'      ):
+         crayfis_build != 'v0.8.1'     and
+         crayfis_build != 'v0.9.2'       ):
         print '\t\t - crayfis_build version not ok, flagging and moving on'
         d_configs.GetKey(ckey).SetTitle('ignored: ' + crayfis_build)
         tree.Delete()
