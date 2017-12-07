@@ -26,6 +26,13 @@ for path, device in rootfiles:
 
 for device, paths in todo.items():
     print device
-    with tarf.open( os.path.join(export_path, device[:-4] + 'tar.gz'), 'w:gz' ) as tarfile:
+    if ( len(paths) == 1 and paths[0].find('job_000') > -1 ):
+        print '\t no new data, skipping'
+        continue
+    if ( os.path.exists( os.path.join(export_path, device[:-4] + 'tar.gz') ) ):
+        print '\t already exists, skipping'
+        continue
+    with tarf.open( name=os.path.join(export_path, device[:-4] + 'tar.gz'), mode='w:gz', dereference=True ) as tarfile:
         for path in paths:
             tarfile.add( os.path.join( path, device ) )
+
